@@ -4,9 +4,10 @@ pub mod nr;
 use nr::Syscalls;
 
 pub fn write(fd: usize, buf: &[u8]) {
-    unsafe {
+    // TODO: if buf.len == ret then Ok(()) else Err(error)
+    let _ret = unsafe {
         syscall3(
-            Syscalls::SYS_write as usize,
+            Syscalls::Write as usize,
             fd,
             buf.as_ptr() as usize,
             buf.len(),
