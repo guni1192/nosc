@@ -3,12 +3,5 @@
 version = 3
 
 [[package]]
-name = "nosc"
-version = "0.1.0"
-dependencies = [
- "systemcalls",
-]
-
-[[package]]
 name = "systemcalls"
 version = "0.1.0"

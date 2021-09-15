@@ -1,3 +1,6 @@
+use systemcalls::write;
+
 fn main() {
-    println!("Hello, world!");
+    let buf = b"Hello from asm!\n";
+    write(1, buf);
 }
