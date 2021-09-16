@@ -3,3 +3,10 @@ rustflags = ["-C", "link-args=-e __start -static -nostartfiles"]
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "link-args=-e _start -static -nostdlib"]
+
+[unstable]
+build-std = ["core", "compiler_builtins"]
+build-std-features = ["compiler-builtins-mem"]
+
+[build]
+target = "x86_64_nosc.json"
