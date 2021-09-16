@@ -7,3 +7,9 @@ edition = "2018"
 
 [dependencies]
 systemcalls = { path = "./systemcalls" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

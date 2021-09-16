@@ -1,4 +1,5 @@
 #![feature(asm)]
+#![no_std]
 
 pub mod nr;
 use nr::Syscalls;
@@ -13,6 +14,12 @@ pub fn write(fd: usize, buf: &[u8]) {
             buf.len(),
         )
     };
+}
+
+pub fn exit(status: i32) {
+    unsafe {
+        syscall1(Syscalls::Exit as usize, status as usize);
+    }
 }
 
 #[inline(always)]
