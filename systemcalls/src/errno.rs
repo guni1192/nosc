@@ -1,5 +1,25 @@
 #[derive(Debug)]
-#[repr(u8)]
+pub struct Error {
+    pub errno: Errno,
+}
+
+impl From<Errno> for Error {
+    fn from(errno: Errno) -> Self {
+        Error { errno }
+    }
+}
+
+impl From<usize> for Errno {
+    fn from(errno: usize) -> Self {
+        match errno {
+            1 => Errno::EPERM,
+            _ => Errno::ENOENT,
+        }
+    }
+}
+
+#[derive(Debug)]
+#[repr(usize)]
 pub enum Errno {
     EPERM = 1,
     ENOENT = 2,
