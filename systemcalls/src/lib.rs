@@ -32,6 +32,7 @@ pub fn _print(args: fmt::Arguments) {
     writer.write_fmt(args).unwrap();
 }
 
+#[inline(always)]
 pub fn write(fd: usize, buf: &[u8]) -> usize {
     syscall3(
         Syscalls::Write as usize,
@@ -41,21 +42,24 @@ pub fn write(fd: usize, buf: &[u8]) -> usize {
     )
 }
 
+#[inline(always)]
 pub fn getpid() -> i32 {
     syscall0(Syscalls::Getpid as usize) as i32
 }
 
+#[inline(always)]
 pub fn exit(status: i32) {
     syscall1(Syscalls::Exit as usize, status as usize);
 }
 
-pub fn execve(cmd: &[u8], args: &[&[u8]], env: &[&[u8]]) {
+#[inline(always)]
+pub fn execve(cmd: &[u8], args: &[*const *const u8], env: &[*const *const u8]) -> i32 {
     syscall3(
         Syscalls::Execve as usize,
         cmd.as_ptr() as usize,
         args.as_ptr() as usize,
         env.as_ptr() as usize,
-    );
+    ) as i32
 }
 
 #[inline(always)]
