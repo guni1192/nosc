@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::nr::Syscalls;
-use crate::{syscall0, syscall1, syscall3, syscall_ret};
+use crate::{syscall0, syscall1, syscall2, syscall3, syscall_ret};
 
 pub type Pid = i32;
 pub type RawFd = i32;
@@ -38,6 +38,18 @@ pub fn execve(
         cmd.as_ptr() as usize,
         args.as_ptr() as usize,
         env.as_ptr() as usize,
+    );
+
+    syscall_ret(ret)?;
+
+    Ok(())
+}
+
+pub fn sethostname(name: &str) -> Result<(), Error> {
+    let ret = syscall2(
+        Syscalls::Sethostname as usize,
+        name.as_ptr() as usize,
+        name.len() as usize,
     );
 
     syscall_ret(ret)?;

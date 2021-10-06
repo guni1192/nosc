@@ -1,10 +1,10 @@
 use crate::error::Error;
 use crate::nr::Syscalls;
-use crate::syscall2;
 use crate::unistd::Pid;
+use crate::{syscall2, syscall_ret};
 
 pub mod clone_flags {
-    type CloneFlags = u32;
+    type CloneFlags = u64;
     pub const CLONE_VM: CloneFlags = 0x00000100;
     pub const CLONE_FS: CloneFlags = 0x00000200;
     pub const CLONE_FILES: CloneFlags = 0x00000400;
@@ -29,6 +29,7 @@ pub mod clone_flags {
     pub const CLONE_NEWPID: CloneFlags = 0x20000000;
     pub const CLONE_NEWNET: CloneFlags = 0x40000000;
     pub const CLONE_IO: CloneFlags = 0x80000000;
+    pub const CLONE_INTO_CGROUP: CloneFlags = 0x200000000;
 }
 
 #[repr(C)]
@@ -49,11 +50,11 @@ pub struct CloneArgs {
 
 #[inline(always)]
 pub fn clone3(clone_args: CloneArgs) -> Result<Pid, Error> {
-    let pid = syscall2(
+    let ret = syscall2(
         Syscalls::Clone3 as usize,
         core::ptr::addr_of!(clone_args) as usize,
         core::mem::size_of::<CloneArgs>(),
-    ) as Pid;
+    );
 
-    Ok(pid)
+    syscall_ret(ret).map(|ret| ret as Pid)
 }
