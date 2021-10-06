@@ -1,6 +1,7 @@
 use crate::errno::Error as SysError;
 use crate::nr::Syscalls;
-use crate::{syscall0, syscall1, syscall3, syscall5, syscall6};
+use crate::{syscall0, syscall1, syscall2, syscall3, syscall4, syscall6};
+use core::mem::size_of;
 
 #[inline(always)]
 pub fn write(fd: usize, buf: &[u8]) -> usize {
@@ -12,9 +13,11 @@ pub fn write(fd: usize, buf: &[u8]) -> usize {
     )
 }
 
+type Pid = i32;
+
 #[inline(always)]
-pub fn getpid() -> i32 {
-    syscall0(Syscalls::Getpid as usize) as i32
+pub fn getpid() -> Pid {
+    syscall0(Syscalls::Getpid as usize) as Pid
 }
 
 #[inline(always)]
@@ -97,6 +100,7 @@ pub const CLONE_NEWNET: CloneFlags          = 0x40000000;
 pub const CLONE_IO: CloneFlags              = 0x80000000;
 
 #[repr(C)]
+#[derive(Default)]
 pub struct CloneArgs {
     flags: u64,
     pidfd: u64,
@@ -110,26 +114,9 @@ pub struct CloneArgs {
     set_tid_size: u64,
 }
 
-pub fn hello(_: *mut usize) -> i64 {
-    write(1, b"hoge\n");
-    0
-}
-
+/*
 #[inline(always)]
-pub fn clone() -> Result<(), SysError> {
-    /*
-        pub unsafe extern "C" fn clone(
-        cb: extern "C" fn(_: *mut c_void) -> c_int,
-        child_stack: *mut c_void,
-        flags: c_int,
-        arg: *mut c_void,
-         ...
-    ) -> c_int
-    */
-
-    // the kernel entry is:
-    // int clone (long flags, void *child_stack, pid_t *parent_tid,
-    //            pid_t *child_tid, void *tls);
+pub fn clone() -> Result<u32, SysError> {
 
     let stack_size = 1024 * 1024;
     let stack = mmap(
@@ -141,20 +128,59 @@ pub fn clone() -> Result<(), SysError> {
         0,
     );
 
-    syscall5(
+    let stack = stack as usize + stack_size;
+    let stack = (stack & 0xFFFF_FFFF_FFFF_FFF0) - 0x0000_0000_0000_0008;
+
+    let ret = syscall5(
         Syscalls::Clone as usize,
         (SIGCHLD) as usize, // long flags
-        stack as usize,     // void *child_stack
+        stack,              // void *child_stack
         0usize,             // pid_t *parent_tid
         0usize,             // pid_t *child_tid
         0usize,             // void *tls
     );
 
-    Ok(())
+    if ret < 0xFFFFFFFF00000000 {
+        Ok(ret as u32)
+    } else {
+        let errno = !(ret) + 0x0000000000000001;
+        Err(SysError {
+            errno: errno.into(),
+        })
+    }
+}
+*/
+
+#[inline(always)]
+pub fn clone3() -> Result<Pid, SysError> {
+    let clone_flags = CLONE_NEWUSER | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWIPC;
+    let clone_args = CloneArgs {
+        exit_signal: SIGCHLD as u64,
+        flags: clone_flags as u64,
+        ..Default::default()
+    };
+
+    let pid = syscall2(
+        Syscalls::Clone3 as usize,
+        core::ptr::addr_of!(clone_args) as usize,
+        size_of::<CloneArgs>(),
+    ) as Pid;
+
+    Ok(pid)
 }
 
 #[inline(always)]
-pub fn clone3() -> Result<(), SysError> {
+pub fn waitpid(pid: Pid, options: i32) -> Result<(), SysError> {
+    let status = 0;
+
+    syscall4(
+        Syscalls::Wait4 as usize,
+        pid as usize,
+        status as usize,
+        options as usize,
+        0,
+    );
+
     Ok(())
 }
 
@@ -179,7 +205,7 @@ pub fn mmap(
     flags: i32,
     fd: i32,
     offset: i32,
-) -> *const u8 {
+) -> *const usize {
     syscall6(
         Syscalls::Mmap as usize,
         addr as usize,
@@ -188,7 +214,7 @@ pub fn mmap(
         flags as usize,
         fd as usize,
         offset as usize,
-    ) as *const u8
+    ) as *const usize
 }
 
 pub const MAP_FILE: i32 = 0x0000;
