@@ -1,12 +1,29 @@
 #![feature(asm)]
 #![no_std]
 
-pub mod errno;
+pub mod error;
+pub mod fcntl;
 pub mod io;
 pub mod nr;
-pub mod sys;
+pub mod sched;
+pub mod signal;
+pub mod unistd;
+pub mod wait;
 
+use error::Error;
 pub use io::_print;
+
+#[inline(always)]
+fn syscall_ret(ret: usize) -> Result<usize, Error> {
+    if ret < 0xFFFFFFFFFFFF0000 {
+        Ok(ret)
+    } else {
+        let errno = !(ret) + 0x0000000000000001;
+        Err(Error {
+            errno: errno.into(),
+        })
+    }
+}
 
 #[inline(always)]
 pub fn syscall0(arg0: usize) -> usize {

@@ -1,4 +1,4 @@
-use crate::sys::write;
+use crate::unistd::write;
 
 #[macro_export]
 macro_rules! print {
@@ -15,7 +15,7 @@ struct MyWriter;
 
 impl fmt::Write for MyWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        write(1, s.as_bytes());
+        write(1, s.as_bytes()).expect("write failed: ");
         Ok(())
     }
 }
