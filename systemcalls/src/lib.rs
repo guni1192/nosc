@@ -1,65 +1,28 @@
 #![feature(asm)]
 #![no_std]
 
-pub mod errno;
+pub mod error;
+pub mod fcntl;
+pub mod io;
 pub mod nr;
-use nr::Syscalls;
+pub mod sched;
+pub mod signal;
+pub mod unistd;
+pub mod wait;
 
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => ($crate::_print(format_args!($($arg)*)));
-}
+use error::Error;
+pub use io::_print;
 
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
-}
-
-struct MyWriter;
-
-impl fmt::Write for MyWriter {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        write(1, s.as_bytes());
-        Ok(())
+#[inline(always)]
+fn syscall_ret(ret: usize) -> Result<usize, Error> {
+    if ret < 0xFFFFFFFFFFFF0000 {
+        Ok(ret)
+    } else {
+        let errno = !(ret) + 0x0000000000000001;
+        Err(Error {
+            errno: errno.into(),
+        })
     }
-}
-
-use core::fmt;
-pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    let mut writer = MyWriter {};
-    writer.write_fmt(args).unwrap();
-}
-
-#[inline(always)]
-pub fn write(fd: usize, buf: &[u8]) -> usize {
-    syscall3(
-        Syscalls::Write as usize,
-        fd,
-        buf.as_ptr() as usize,
-        buf.len(),
-    )
-}
-
-#[inline(always)]
-pub fn getpid() -> i32 {
-    syscall0(Syscalls::Getpid as usize) as i32
-}
-
-#[inline(always)]
-pub fn exit(status: i32) {
-    syscall1(Syscalls::Exit as usize, status as usize);
-}
-
-#[inline(always)]
-pub fn execve(cmd: &[u8], args: &[*const *const u8], env: &[*const *const u8]) -> i32 {
-    syscall3(
-        Syscalls::Execve as usize,
-        cmd.as_ptr() as usize,
-        args.as_ptr() as usize,
-        env.as_ptr() as usize,
-    ) as i32
 }
 
 #[inline(always)]
@@ -201,12 +164,4 @@ pub fn syscall6(
         );
     }
     ret
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }
