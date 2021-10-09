@@ -56,3 +56,15 @@ pub fn sethostname(name: &str) -> Result<(), Error> {
 
     Ok(())
 }
+
+pub fn mkdir(path: &str, mode: i32) -> Result<(), Error> {
+    let ret = syscall2(
+        Syscalls::Mkdir as usize,
+        path.as_ptr() as usize,
+        mode as usize,
+    );
+
+    syscall_ret(ret)?;
+
+    Ok(())
+}

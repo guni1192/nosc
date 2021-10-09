@@ -8,7 +8,7 @@ use systemcalls::fcntl::{o_flag, open};
 use systemcalls::println;
 use systemcalls::sched::{clone3, clone_flags::*, CloneArgs};
 use systemcalls::signal;
-use systemcalls::unistd::{execve, exit, getpid, sethostname, RawFd};
+use systemcalls::unistd::{execve, exit, getpid, mkdir, sethostname, RawFd};
 use systemcalls::wait::waitpid;
 
 #[panic_handler]
@@ -19,11 +19,11 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 fn cgroup_open() -> Result<RawFd, Error> {
-    let path = "/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/hoge\0";
+    let path = "/sys/fs/cgroup/nosc\0";
     let flag = o_flag::O_RDONLY | o_flag::O_DIRECTORY;
-    let mode = 0o755;
+    let _ = mkdir(path, 0o644);
 
-    open(path, flag, mode)
+    open(path, flag, 0o644)
 }
 
 #[no_mangle]
@@ -37,13 +37,8 @@ pub extern "C" fn _start() -> ! {
 
     println!("[Parent] my pid: {}", getpid());
 
-    let clone_flags = CLONE_INTO_CGROUP
-        | CLONE_NEWUSER
-        | CLONE_NEWUTS
-        | CLONE_NEWPID
-        | CLONE_NEWNS
-        | CLONE_NEWIPC
-        | CLONE_NEWNET;
+    let clone_flags =
+        CLONE_INTO_CGROUP | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWIPC | CLONE_NEWNET;
 
     let clone_args = CloneArgs {
         exit_signal: signal::SIGCHLD as u64,
@@ -58,7 +53,6 @@ pub extern "C" fn _start() -> ! {
         println!("[Parent] child pid: {}", pid);
         waitpid(pid as i32, 0).expect("waitpid failed: ");
     } else {
-        println!("[Child] process start");
         sethostname("nosc-container").expect("failed to sethostname");
         execve(&cmd[..], &args[..], &env[..]).expect("execve failed: ");
     }
