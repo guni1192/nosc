@@ -1,4 +1,3 @@
-#![feature(asm)]
 #![no_std]
 
 pub mod error;
@@ -10,6 +9,7 @@ pub mod signal;
 pub mod unistd;
 pub mod wait;
 
+use core::arch::asm;
 use error::Error;
 pub use io::_print;
 

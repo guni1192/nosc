@@ -6,9 +6,9 @@ version = 3
 name = "nosc"
 version = "0.1.0"
 dependencies = [
- "systemcalls",
+ "syscall",
 ]
 
 [[package]]
-name = "systemcalls"
+name = "syscall"
 version = "0.1.0"

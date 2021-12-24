@@ -13,4 +13,3 @@
     "disable-redzone": true,
     "features": "-mmx,-sse,+soft-float"
 }
-

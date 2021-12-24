@@ -3,13 +3,13 @@
 #![feature(panic_info_message)]
 
 use core::panic::PanicInfo;
-use systemcalls::error::Error;
-use systemcalls::fcntl::{o_flag, open};
-use systemcalls::println;
-use systemcalls::sched::{clone3, clone_flags::*, CloneArgs};
-use systemcalls::signal;
-use systemcalls::unistd::{execve, exit, getpid, mkdir, sethostname, RawFd};
-use systemcalls::wait::waitpid;
+use syscall::error::Error;
+use syscall::fcntl::{o_flag, open};
+use syscall::println;
+use syscall::sched::{clone3, clone_flags::*, CloneArgs};
+use syscall::signal;
+use syscall::unistd::{execve, exit, getpid, mkdir, sethostname, RawFd};
+use syscall::wait::waitpid;
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {

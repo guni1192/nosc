@@ -1,18 +1,2 @@
-[package]
-name = "nosc"
-version = "0.1.0"
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-systemcalls = { path = "./systemcalls" }
-
 [workspace]
-members = ["systemcalls"]
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
+members = ["nosc", "syscall"]
