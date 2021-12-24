@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  check-systemcalls:
+  check-syscall:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,10 +17,10 @@ jobs:
             override: true
             components: rustfmt, clippy, rust-src
       - name: Check formatting
-        working-directory: systemcalls
+        working-directory: syscall
         run: cargo fmt --all -- --check
       - name: Check clippy
-        working-directory: systemcalls
+        working-directory: syscall
         run: cargo clippy -- -D warnings
 
   check-nosc:
@@ -33,6 +33,8 @@ jobs:
             override: true
             components: rustfmt, clippy, rust-src
       - name: Check formatting
+        working-directory: nosc
         run: cargo fmt --all -- --check
       - name: Check clippy
+        working-directory: nosc
         run: cargo clippy -- -D warnings
